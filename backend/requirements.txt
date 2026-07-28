@@ -1,3 +1,6 @@
 fastapi
 uvicorn[standard]
 python-dotenv
+# Streamlit 웹 UI (streamlit_app.py)
+streamlit
+Pillow

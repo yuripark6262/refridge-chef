@@ -87,6 +87,16 @@ npm run dev
 ```
 브라우저에서 http://localhost:5173 접속. `/api` 요청은 Vite 프록시를 통해 백엔드(8000)로 전달된다.
 
+### 3) (대안) Streamlit UI — Python 단일 프로세스
+React/Vite 대신 Python 기반 UI로도 사용할 수 있다. `main.py`의 모델 호출과 `db.py`의 저장/인증 로직을 그대로 재사용하며, 별도의 API 서버 없이 이 파일 하나로 동작한다.
+```bash
+cd backend
+python -m streamlit run streamlit_app.py    # http://localhost:8501
+```
+- 파일 드래그앤드롭/클릭 업로드 또는 이미지 URL 입력 → **업로드 즉시 AI 자동 분석**
+- 재료를 **이름·수량·상태 카드**로 표시하고 카드에서 직접 수정·삭제
+- 사이드바 로그인/프로필, 레시피 추천·저장 (React 버전과 동일한 `app.db` 공유)
+
 ## 테스트
 - `test_api.py` — OpenRouter API 텍스트/이미지 인식 기본 동작 확인
 - `backend/test_recognize.py` — 백엔드가 켜진 상태에서 `/api/recognize` 통합 테스트

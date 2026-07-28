@@ -21,6 +21,12 @@ node_modules/
 npm-debug.log*
 frontend/dist/
 
+# 로컬 데모/스크린샷 도구 (커밋 대상 아님)
+scratch_fridge.png
+frontend/shoot*.mjs
+screenshots/step1-result.png
+screenshots/streamlit-recognize.png
+
 # OS / editor
 .DS_Store
 Thumbs.db
