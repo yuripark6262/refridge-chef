@@ -6,6 +6,7 @@
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Gemma via OpenRouter](https://img.shields.io/badge/Gemma-via%20OpenRouter-8A2BE2?style=for-the-badge)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 냉장고 사진에서 식재료를 인식하고, 그 재료로 만들 수 있는 레시피를 추천하고, 사용자 프로필에 저장하는 웹 앱. OpenRouter의 `google/gemma-4-26b-a4b-it:free` 멀티모달 모델을 사용한다.
 
@@ -93,3 +94,6 @@ npm run dev
 - `backend/test_auth.py` — 회원가입→프로필→저장/조회/삭제 + 권한 격리 통합 테스트
 
 > Windows 콘솔에서 한글이 깨지면 `PYTHONUTF8=1` 을 붙여 실행한다.
+
+## 라이선스
+[MIT](LICENSE) © 2026 yuris
