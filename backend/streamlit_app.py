@@ -176,7 +176,7 @@ with st.sidebar:
 
 # ---------- 본문 ----------
 st.title("🧊 냉장고 셰프")
-st.caption("냉장고 사진 → 재료 자동 분석 → 레시피 추천 → 저장. (Streamlit 버전)")
+st.caption("냉장고 사진 → 재료 인식 → 레시피 추천 → 저장. (Streamlit 버전)")
 
 # ── 1단계: 이미지 입력 (파일 업로드 / URL) ──
 st.subheader("① 냉장고 사진 입력")
@@ -204,14 +204,14 @@ with tab_url:
         image_sig = f"url:{url.strip()}"
         preview = url.strip()
 
-# 미리보기 + 업로드 즉시 자동 분석
+# 미리보기 + "재료 인식 시작" 버튼
 if image_url:
     st.image(preview, caption="입력한 사진", use_container_width=True)
-    col_a, col_b = st.columns([1, 3])
-    reanalyze = col_a.button("🔄 다시 분석")
-    if image_sig != ss.img_sig or reanalyze:
+    already_done = image_sig == ss.img_sig and bool(ss.ingredients)
+    btn_label = "🔄 재료 다시 인식" if already_done else "🔍 재료 인식 시작"
+    if st.button(btn_label, type="primary"):
         ss.img_sig = image_sig
-        with st.spinner("🤖 AI가 사진 속 재료를 자동 분석하고 있어요…"):
+        with st.spinner("🤖 AI가 사진 속 재료를 분석하고 있어요…"):
             try:
                 analyze_image(image_url)
                 if not ss.ingredients:
