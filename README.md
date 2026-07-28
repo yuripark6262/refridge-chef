@@ -1,5 +1,12 @@
 # 🧊 냉장고 셰프 — 재료 인식 & 레시피 추천
 
+![Python](https://img.shields.io/badge/Python-3.14-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Gemma via OpenRouter](https://img.shields.io/badge/Gemma-via%20OpenRouter-8A2BE2?style=for-the-badge)
+
 냉장고 사진에서 식재료를 인식하고, 그 재료로 만들 수 있는 레시피를 추천하고, 사용자 프로필에 저장하는 웹 앱. OpenRouter의 `google/gemma-4-26b-a4b-it:free` 멀티모달 모델을 사용한다.
 
 - 요구사항 문서: [PRD_step1.md](PRD_step1.md) · [PRD_step2.md](PRD_step2.md) · [PRD_step3.md](PRD_step3.md)
