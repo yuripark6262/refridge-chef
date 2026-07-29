@@ -26,7 +26,10 @@ ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
 API_KEY = os.environ.get("openrouter_api_key")
-MODEL = "google/gemma-4-26b-a4b-it:free"
+# 이미지 인식(멀티모달)은 Gemma, 레시피 생성(텍스트)은 DeepSeek로 분리.
+# DeepSeek 텍스트 모델은 비전 미지원이므로 인식에는 쓸 수 없다.
+MODEL = "google/gemma-4-26b-a4b-it:free"          # 이미지 재료 인식
+RECIPE_MODEL = "deepseek/deepseek-chat"            # 레시피 생성 (DeepSeek V3)
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 RECOGNIZE_PROMPT = (
@@ -159,9 +162,9 @@ class SavedRecipe(BaseModel):
     recipe: Recipe
 
 
-def _chat(messages: list[dict]) -> str:
+def _chat(messages: list[dict], model: str | None = None) -> str:
     """OpenRouter chat completions 호출, 모델의 텍스트 응답을 반환."""
-    payload = json.dumps({"model": MODEL, "messages": messages}).encode("utf-8")
+    payload = json.dumps({"model": model or MODEL, "messages": messages}).encode("utf-8")
     req = urllib.request.Request(
         OPENROUTER_URL,
         data=payload,
@@ -294,7 +297,7 @@ def recipes(req: RecipeRequest):
         ingredients=", ".join(req.ingredients),
     )
     try:
-        raw = _chat([{"role": "user", "content": prompt}])
+        raw = _chat([{"role": "user", "content": prompt}], model=RECIPE_MODEL)
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "replace")
         raise HTTPException(502, f"OpenRouter 오류 (HTTP {e.code}): {detail}")
@@ -381,17 +384,38 @@ def save_recipe(req: SaveRecipeRequest, user=Depends(current_user)):
 
 
 @app.get("/api/recipes/saved", response_model=list[SavedRecipe])
-def saved_recipes(user=Depends(current_user)):
+def saved_recipes(
+    user=Depends(current_user),
+    q: str | None = None,              # 제목·재료 키워드 검색
+    difficulty: str | None = None,     # 난이도 필터 (쉬움/보통/어려움)
+    max_minutes: int | None = None,    # 최대 조리시간 필터
+):
     rows = db.list_recipes(user["id"])
-    return [
-        {
+    q_norm = (q or "").strip().lower()
+    result = []
+    for r in rows:
+        recipe = json.loads(r["data"])
+        # 키워드: 제목 또는 재료명에 포함
+        if q_norm:
+            hay = (recipe.get("title", "") + " " +
+                   " ".join(i.get("name", "") for i in recipe.get("ingredients", []))).lower()
+            if q_norm not in hay:
+                continue
+        # 난이도
+        if difficulty and recipe.get("difficulty") != difficulty:
+            continue
+        # 최대 조리시간
+        if max_minutes is not None:
+            m = recipe.get("minutes")
+            if m is None or m > max_minutes:
+                continue
+        result.append({
             "id": r["id"],
             "title": r["title"],
             "created_at": r["created_at"],
-            "recipe": json.loads(r["data"]),
-        }
-        for r in rows
-    ]
+            "recipe": recipe,
+        })
+    return result
 
 
 @app.delete("/api/recipes/saved/{recipe_id}")

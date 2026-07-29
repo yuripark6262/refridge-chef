@@ -242,3 +242,18 @@ button.small { font-size: 0.85rem; padding: 8px 12px; }
 .saved-head { cursor: pointer; user-select: none; }
 .saved-head .toggle { font-size: 0.7rem; color: var(--muted); margin-left: 6px; }
 .recipe-head .date { color: var(--muted); }
+
+.saved-filters { display: flex; gap: 8px; margin: 12px 0 16px; flex-wrap: wrap; }
+.saved-filters .search { flex: 1; min-width: 160px; }
+.saved-filters input,
+.saved-filters select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.saved-filters input[type="number"] { width: 100px; }
+.saved-filters input:focus,
+.saved-filters select:focus { outline: none; border-color: var(--accent); }

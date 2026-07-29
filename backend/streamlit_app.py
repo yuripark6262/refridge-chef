@@ -22,7 +22,7 @@ from PIL import Image
 
 import db
 # 검증된 백엔드 로직 재사용 (import 시 서버가 뜨지 않음 — 함수/상수만 로드)
-from main import RECIPE_PROMPT_TEMPLATE, _chat, _extract_json, _parse_recipes
+from main import RECIPE_MODEL, RECIPE_PROMPT_TEMPLATE, _chat, _extract_json, _parse_recipes
 
 st.set_page_config(page_title="냉장고 셰프", page_icon="🧊", layout="centered")
 db.init_db()
@@ -263,9 +263,9 @@ if valid_names:
         prompt = RECIPE_PROMPT_TEMPLATE.format(
             count=3, conditions=conditions, ingredients=", ".join(valid_names)
         )
-        with st.spinner("재료로 만들 수 있는 요리를 찾고 있어요…"):
+        with st.spinner("DeepSeek가 재료로 만들 수 있는 요리를 찾고 있어요…"):
             try:
-                ss.recipes = _parse_recipes(_chat([{"role": "user", "content": prompt}]))
+                ss.recipes = _parse_recipes(_chat([{"role": "user", "content": prompt}], model=RECIPE_MODEL))
                 if not ss.recipes:
                     st.warning("조건에 맞는 레시피를 만들지 못했어요. 재료나 조건을 조정해 보세요.")
             except Exception as e:  # noqa: BLE001
@@ -296,18 +296,51 @@ if ss.recipes:
             else:
                 st.info("🔒 저장하려면 왼쪽 사이드바에서 로그인하세요.")
 
-# 내 레시피
+# 내 레시피 (검색 · 필터 포함)
 if ss.user:
     st.divider()
     st.subheader("📚 내 레시피")
     rows = db.list_recipes(ss.user["id"])
     if not rows:
         st.caption("저장된 레시피가 없어요. 위 레시피 카드의 “저장”을 눌러보세요.")
-    for row in rows:
-        data = json.loads(row["data"])
-        with st.expander(f"{data['title']}  ·  {row['created_at'][:10]}"):
-            for i, s in enumerate(data.get("steps", []), 1):
-                st.markdown(f"{i}. {s}")
-            if st.button("🗑 삭제", key=f"delsaved_{row['id']}"):
-                db.delete_recipe(ss.user["id"], row["id"])
-                st.rerun()
+    else:
+        f1, f2, f3 = st.columns([3, 2, 2])
+        q = f1.text_input("🔎 검색 (제목·재료)", key="saved_q").strip().lower()
+        diff = f2.selectbox("난이도", ["전체", "쉬움", "보통", "어려움"], key="saved_diff")
+        max_min = f3.number_input("최대 조리시간(분, 0=전체)", min_value=0, max_value=240, value=0, step=5, key="saved_max")
+
+        matched = []
+        for row in rows:
+            data = json.loads(row["data"])
+            if q:
+                hay = (data.get("title", "") + " " +
+                       " ".join(i.get("name", "") for i in data.get("ingredients", []))).lower()
+                if q not in hay:
+                    continue
+            if diff != "전체" and data.get("difficulty") != diff:
+                continue
+            if max_min and (data.get("minutes") is None or data["minutes"] > max_min):
+                continue
+            matched.append((row, data))
+
+        st.caption(f"{len(matched)} / {len(rows)}개 표시")
+        if not matched:
+            st.info("검색·필터 조건에 맞는 레시피가 없어요.")
+        for row, data in matched:
+            meta = []
+            if data.get("minutes") is not None:
+                meta.append(f"⏱ {data['minutes']}분")
+            if data.get("difficulty"):
+                meta.append(f"📊 {data['difficulty']}")
+            with st.expander(f"{data['title']}  ·  {' · '.join(meta)}  ·  {row['created_at'][:10]}"):
+                have = [i["name"] for i in data.get("ingredients", []) if i.get("have", True)]
+                missing = [i["name"] for i in data.get("ingredients", []) if not i.get("have", True)]
+                st.markdown("**보유 재료:** " + (", ".join(have) or "—"))
+                if missing:
+                    st.markdown("**부족 재료:** " + ", ".join(missing))
+                st.markdown("**조리 단계:**")
+                for i, s in enumerate(data.get("steps", []), 1):
+                    st.markdown(f"{i}. {s}")
+                if st.button("🗑 삭제", key=f"delsaved_{row['id']}"):
+                    db.delete_recipe(ss.user["id"], row["id"])
+                    st.rerun()
